@@ -1,4 +1,4 @@
-name = "stream-player"
+name = "player"
 main = "worker.js"
 compatibility_date = "2024-06-01"
 workers_dev = true
