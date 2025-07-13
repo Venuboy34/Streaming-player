@@ -1,126 +1,95 @@
-<!DOCTYPE html>
+export default {
+  async fetch(request) {
+    return new Response(`<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Universal Movie Player</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.6.0/shaka-player.compiled.js"></script>
+  <meta charset="UTF-8">
+  <title>Universal Player</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.3.5/shaka-player.compiled.js"></script>
   <style>
     body {
-      background-color: #000;
-      color: #fff;
       margin: 0;
-      padding: 0;
+      background: #000;
+      color: #fff;
       font-family: Arial, sans-serif;
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: flex-start;
-      height: 100vh;
-    }
-    #player-container {
-      width: 100%;
-      max-width: 1000px;
-      margin: 20px;
+      justify-content: center;
     }
     video {
       width: 100%;
+      max-width: 1000px;
       height: auto;
-      background: #000;
+      margin-top: 20px;
+      border-radius: 12px;
     }
     .controls {
-      text-align: center;
       margin-top: 10px;
+      text-align: center;
     }
-    select, button {
-      background: #222;
-      color: white;
+    button {
+      padding: 10px 20px;
+      background: #1db954;
       border: none;
-      padding: 10px 15px;
-      margin: 5px;
-      border-radius: 4px;
-      font-size: 14px;
+      color: white;
+      font-weight: bold;
+      border-radius: 6px;
+      cursor: pointer;
     }
-    h1 {
-      font-size: 18px;
-      margin-top: 20px;
+    button:hover {
+      background: #1ed760;
     }
   </style>
 </head>
 <body>
-  <div id="player-container">
-    <video id="video" controls autoplay></video>
-    <div class="controls">
-      <select id="audioSelect"></select>
-      <select id="subtitleSelect"></select>
-      <button onclick="downloadCurrent()">Download</button>
-    </div>
+  <h2>🎬 Universal Player</h2>
+  <video id="video" autoplay muted controls></video>
+  <div class="controls">
+    <button onclick="downloadVideo()">⬇️ Download</button>
   </div>
-
   <script>
-    const video = document.getElementById('video');
-    const player = new shaka.Player(video);
-    const audioSelect = document.getElementById('audioSelect');
-    const subtitleSelect = document.getElementById('subtitleSelect');
-
-    // 🔗 Replace this with your actual dynamic video URL from query params or backend
-    const videoURL = new URLSearchParams(window.location.search).get('video') || 'https://storage.googleapis.com/shaka-demo-assets/angel-one/dash.mpd';
-
     async function initPlayer() {
+      const video = document.getElementById('video');
+      const player = new shaka.Player(video);
+
+      // Get movie URL from query param ?movie=your.m3u8
+      const urlParams = new URLSearchParams(window.location.search);
+      const movieUrl = urlParams.get('movie') || 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8';
+
       try {
-        await player.load(videoURL);
-
-        const tracks = player.getVariantTracks();
-        const audioTracks = [...new Set(tracks.map(t => t.language))];
-
-        audioSelect.innerHTML = '';
-        audioTracks.forEach(lang => {
-          const option = document.createElement('option');
-          option.value = lang;
-          option.text = lang.toUpperCase();
-          audioSelect.appendChild(option);
-        });
-
-        audioSelect.addEventListener('change', () => {
-          const selectedLang = audioSelect.value;
-          const langTrack = tracks.find(t => t.language === selectedLang);
-          if (langTrack) player.selectVariantTrack(langTrack, true);
-        });
-
-        // Subtitles
-        const textTracks = player.getTextTracks();
-        subtitleSelect.innerHTML = '<option value="">Off</option>';
-        textTracks.forEach(track => {
-          const option = document.createElement('option');
-          option.value = track.id;
-          option.text = track.language.toUpperCase();
-          subtitleSelect.appendChild(option);
-        });
-
-        subtitleSelect.addEventListener('change', () => {
-          const id = subtitleSelect.value;
-          if (id === '') {
-            player.setTextTrackVisibility(false);
-          } else {
-            const track = textTracks.find(t => t.id == id);
-            if (track) {
-              player.selectTextTrack(track);
-              player.setTextTrackVisibility(true);
-            }
-          }
-        });
-
-      } catch (err) {
-        console.error('Error loading video:', err);
+        await player.load(movieUrl);
+        console.log('Video loaded');
+      } catch (e) {
+        console.error('Error loading video:', e);
         alert('Failed to load video.');
       }
     }
 
-    function downloadCurrent() {
-      window.open(videoURL, '_blank');
+    function downloadVideo() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const directLink = urlParams.get('download') || '';
+      if (!directLink) {
+        alert('No download link provided in URL (?download=...)');
+        return;
+      }
+      const a = document.createElement('a');
+      a.href = directLink;
+      a.download = '';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
     }
 
     document.addEventListener('DOMContentLoaded', initPlayer);
   </script>
 </body>
 </html>
+    `, {
+      headers: {
+        'content-type': 'text/html; charset=UTF-8',
+      },
+    });
+  },
+};
